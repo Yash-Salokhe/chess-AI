@@ -1,27 +1,53 @@
 {% extends "layout.html" %}
 {% block body %}
+
+<div style="margin: 20px;">
+  <div id="myBoard" style="width: 400px; margin-bottom: 15px;"></div>
+  <button id="showPositionBtn">Show FEN</button>
+  <button onclick="resetBoard()">Reset</button>
+</div>
+
 <script>
-  var board = Chessboard('myBoard', {
+  const board = Chessboard('myBoard', {
     position: 'start',
     pieceTheme: '{{ url_for("static", filename="img/chesspieces/wikipedia/") }}{piece}.png',
-    draggable: true
-    /*dropOffBoard: 'trash'*/
-
+    draggable: true,
+    onDrop: onDrop
   });
 
-  function clickShowPositionBtn () {
-  console.log('Current position as an Object:')
-  console.log(board.position())
+  function onDrop(source, target) {
+    const move = source + target;
 
-  console.log('Current position as a FEN string:')
-  console.log(board.fen())
-}
+    fetch('/move', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ move: move })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.ai_move) {
+        board.move(source + '-' + target);
+        setTimeout(() => {
+          board.move(data.ai_move.slice(0, 2) + '-' + data.ai_move.slice(2));
+        }, 300);
+      } else {
+        alert(data.error || "Invalid move!");
+        board.position(board.fen()); // snapback
+      }
+    });
+  }
 
-$('#showPositionBtn').on('click', clickShowPositionBtn)
+  function resetBoard() {
+    fetch('/reset', { method: 'POST' })
+      .then(() => board.start());
+  }
 
-function resetBoard() {
-    $.post('/reset');
-}
+  document.getElementById("showPositionBtn").onclick = function () {
+    console.log('FEN:', board.fen());
+    console.log('Position Object:', board.position());
+  };
 </script>
 
 {% endblock %}

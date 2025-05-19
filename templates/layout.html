@@ -8,10 +8,6 @@
     <script src="{{ url_for('static', filename='js/chessboard-1.0.0.min.js') }}"></script>
 </head>
 <body>
-<div id="myBoard" style="width: 400px"></div>
-<button onclick="resetBoard()">Reset</button>
-    {% block body %}{% endblock %}
-
-</script>
+{% block body %}{% endblock %}
 </body>
 </html>

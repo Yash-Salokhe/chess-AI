@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chessboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/chessboard-1.0.0.min.css') }}">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="{{ url_for('static', filename='js/chessboard-1.0.0.min.js') }}"></script>
+</head>
+<body>
+  <div id="myBoard" style="width: 400px"></div>
+<script>
+  var board = Chessboard('myBoard', {
+    position: 'start',
+    pieceTheme: '{{ url_for("static", filename="img/chesspieces/wikipedia/") }}{piece}.png'
+  });
+</script>
+
+</body>
+</html>

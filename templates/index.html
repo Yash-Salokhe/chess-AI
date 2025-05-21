@@ -1,8 +1,36 @@
 {% extends "layout.html" %}
 {% block body %}
 
+
+<form method="POST">
+  <label for="whiteAgent">White Agent:</label>
+  <select name="whiteAgent" id="whiteAgent">
+    {% for agent in formData.agentList %}
+      <option value="{{ agent }}" {% if formData.selectedWhiteAgent == agent %}selected{% endif %}>
+        {{ agent }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <label for="blackAgent">Black Agent:</label>
+  <select name="blackAgent" id="blackAgent">
+    {% for agent in formData.agentList %}
+      <option value="{{ agent }}" {% if formData.selectedBlackAgent == agent %}selected{% endif %}>
+        {{ agent }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <button type="submit">Start Game</button>
+</form>
+
+{% if formData.selectedWhiteAgent and formData.selectedBlackAgent %}
+  <p>You selected: <strong>{{ formData.selectedWhiteAgent }}</strong> (White) vs <strong>{{ formData.selectedBlackAgent }}</strong> (Black)</p>
+{% endif %}
+
 <div style="margin: 20px;">
   <div id="myBoard" style="width: 400px; margin-bottom: 15px;"></div>
+
   <button id="showPositionBtn">Show FEN</button>
   <button onclick="resetBoard()">Reset</button>
 </div>
@@ -15,29 +43,33 @@
     onDrop: onDrop
   });
 
-  function onDrop(source, target) {
-    const move = source + target;
+  function onDrop(source, target, piece, newPos, oldPos, orientation) {
+  const move = source + target;
 
-    fetch('/move', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ move: move })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.ai_move) {
-        board.move(source + '-' + target);
-        setTimeout(() => {
-          board.move(data.ai_move.slice(0, 2) + '-' + data.ai_move.slice(2));
-        }, 300);
-      } else {
-        alert(data.error || "Invalid move!");
-        board.position(board.fen()); // snapback
-      }
-    });
-  }
+  return fetch('/move', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ move: move })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.ai_move) {
+      // ✅ Move is legal: update board for both player and AI
+      board.move(source + '-' + target);
+      setTimeout(() => {
+        board.move(data.ai_move.slice(0, 2) + '-' + data.ai_move.slice(2));
+      }, 300);
+    } else {
+      alert(data.error || "Invalid move!");
+      board.position(oldPos);  // ❌ Undo illegal move
+    }
+  })
+  .catch(error => {
+    console.error('Server error:', error);
+    board.position(oldPos);  // ❌ Undo on server error
+  });
+}
+
 
   function resetBoard() {
     fetch('/reset', { method: 'POST' })

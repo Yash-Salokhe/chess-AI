@@ -6,9 +6,29 @@ import random
 app = Flask(__name__)
 board = chess.Board()
 
-@app.route('/')
+# class AgentFormData:
+#     def __init__(self,agentList, selectedWhiteAgent = None, selectedBlackAgent = None):
+#         self.agentList = agentList
+#         selectedWhiteAgent = selectedWhiteAgent
+#         selectedBlackAgent = selectedBlackAgent
+
+
+@app.route('/', methods =['GET','POST'])
 def index():
-    return render_template('index.html')
+    agentList = ['Minimax','MCTS','XGBoost', 'Neural Network']
+    selectedWhiteAgent = selectedBlackAgent = None
+
+    if request.method == 'POST':
+        selectedWhiteAgent = request.form['whiteAgent']
+        selectedBlackAgent = request.form['blackAgent']
+        print(selectedBlackAgent,selectedWhiteAgent)
+    formData = {
+        "agentList"          : agentList,
+        "selectedWhiteAgent" : selectedWhiteAgent, 
+        "selectedBlackAgent" : selectedBlackAgent
+        }
+
+    return render_template('index.html',formData= formData)
 
 @app.route('/move', methods=['POST'])
 def player_move():
